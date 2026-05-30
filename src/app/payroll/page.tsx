@@ -4,8 +4,16 @@ import { prisma } from "@/lib/db";
 import { formatDate, formatRupiah, titleCaseEnum } from "@/lib/format";
 import { toDateInputValue } from "@/lib/dates";
 
-export default async function PayrollPage() {
+type PayrollPageProps = {
+  searchParams: Promise<{
+    error?: string;
+    success?: string;
+  }>;
+};
+
+export default async function PayrollPage({ searchParams }: PayrollPageProps) {
   const user = await requireUser();
+  const params = await searchParams;
   const isAdmin = user.role === "ADMIN" || user.role === "OWNER";
 
   const [runs, myItems] = await Promise.all([
@@ -37,6 +45,9 @@ export default async function PayrollPage() {
 
   return (
     <AppShell user={user} title="Payroll" subtitle="Payroll periode 29 sampai 29 dan slip per karyawan.">
+      {params.error ? <div className="notice error" style={{ marginBottom: 16 }}>{params.error}</div> : null}
+      {params.success ? <div className="notice" style={{ marginBottom: 16 }}>{params.success}</div> : null}
+
       {isAdmin ? (
         <section className="card pad stack">
           <form className="split-actions" action="/api/payroll/generate" method="post">

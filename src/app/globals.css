@@ -747,6 +747,26 @@ tr:last-child td {
   text-align: center;
 }
 
+.details-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  cursor: pointer;
+  font-weight: 800;
+  list-style: none;
+}
+
+.details-summary::-webkit-details-marker {
+  display: none;
+}
+
+.details-summary span {
+  color: var(--muted);
+  font-size: 0.86rem;
+  font-weight: 700;
+}
+
 .qr-box {
   display: grid;
   place-items: center;

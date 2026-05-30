@@ -106,6 +106,10 @@ function NavLinks({ isAdmin }: { isAdmin: boolean }) {
             <CalendarDays />
             Jadwal
           </a>
+          <a className="nav-link" href="/admin/holidays">
+            <CalendarDays />
+            Libur
+          </a>
           <a className="nav-link" href="/approvals">
             <UserRoundCheck />
             Approval

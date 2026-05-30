@@ -1,5 +1,6 @@
 const JAKARTA_OFFSET_HOURS = 7;
 const JAKARTA_OFFSET_MS = JAKARTA_OFFSET_HOURS * 60 * 60 * 1000;
+const ONE_DAY_MS = 24 * 60 * 60 * 1000;
 
 export function startOfDay(date: Date) {
   return startOfDateInput(toDateInputValue(date));
@@ -31,6 +32,15 @@ export function toDateInputValue(date: Date) {
   const month = `${jakartaDate.getUTCMonth() + 1}`.padStart(2, "0");
   const day = `${jakartaDate.getUTCDate()}`.padStart(2, "0");
   return `${year}-${month}-${day}`;
+}
+
+export function isSundayInJakarta(date: Date) {
+  const jakartaDate = new Date(date.getTime() + JAKARTA_OFFSET_MS);
+  return jakartaDate.getUTCDay() === 0;
+}
+
+export function addDays(date: Date, days: number) {
+  return new Date(date.getTime() + days * ONE_DAY_MS);
 }
 
 export function getPayrollPeriod(periodEndInput?: string) {

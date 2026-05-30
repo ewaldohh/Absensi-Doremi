@@ -10,7 +10,15 @@ export async function POST(request: Request) {
   }
 
   const formData = await request.formData();
-  await generatePayrollRun(String(formData.get("periodEnd") ?? ""), user.id);
+  try {
+    await generatePayrollRun(String(formData.get("periodEnd") ?? ""), user.id);
+  } catch (error) {
+    console.error("Payroll generation failed", error);
+    return NextResponse.redirect(
+      new URL("/payroll?error=Generate payroll gagal. Pastikan database sudah di-update dan coba lagi.", request.url),
+      303
+    );
+  }
 
-  return NextResponse.redirect(new URL("/payroll", request.url), 303);
+  return NextResponse.redirect(new URL("/payroll?success=Payroll berhasil digenerate.", request.url), 303);
 }

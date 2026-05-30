@@ -7,7 +7,7 @@ import {
   RequestStatus
 } from "@/generated/prisma/enums";
 import { prisma } from "@/lib/db";
-import { getPayrollPeriod } from "@/lib/dates";
+import { addDays, getPayrollPeriod, isSundayInJakarta, startOfDay, toDateInputValue } from "@/lib/dates";
 import { getSettingsMap, settingNumber } from "@/lib/settings";
 
 export async function generatePayrollRun(periodEndInput: string | undefined, generatedBy?: string) {
@@ -45,6 +45,16 @@ export async function generatePayrollRun(periodEndInput: string | undefined, gen
   const lateComponent = await ensurePayrollComponent("Potongan Terlambat", "DEDUCTION", "PER_DAY", lateDeductionAmount);
   const leaveComponent = await ensurePayrollComponent("Potongan Izin/Sakit", "DEDUCTION", "PER_DAY", leaveDeductionAmount);
   const overtimeComponent = await ensurePayrollComponent("Lembur", "EARNING", "PER_HOUR", 0);
+  const manualHolidays = await prisma.holiday.findMany({
+    where: {
+      holidayDate: {
+        gte: periodStart,
+        lte: periodEnd
+      }
+    }
+  });
+  const manualHolidayDates = new Set(manualHolidays.map((holiday) => toDateInputValue(holiday.holidayDate)));
+  const isNonWorkingDay = (date: Date) => isSundayInJakarta(date) || manualHolidayDates.has(toDateInputValue(date));
 
   return prisma.$transaction(async (tx) => {
     await tx.payrollRun.deleteMany({
@@ -107,14 +117,15 @@ export async function generatePayrollRun(periodEndInput: string | undefined, gen
           return false;
         }
 
+        if (isNonWorkingDay(event.eventTime)) {
+          return false;
+        }
+
         const toleranceEnd = new Date(event.schedule.startTime.getTime() + 15 * 60 * 1000);
         return event.eventTime > toleranceEnd;
       }).length;
 
-      const approvedLeaveDays = await tx.leaveRequest.aggregate({
-        _sum: {
-          totalDays: true
-        },
+      const approvedLeaves = await tx.leaveRequest.findMany({
         where: {
           employeeId: employee.id,
           status: RequestStatus.APPROVED,
@@ -127,7 +138,10 @@ export async function generatePayrollRun(periodEndInput: string | undefined, gen
         }
       });
 
-      const leaveDays = approvedLeaveDays._sum.totalDays ?? 0;
+      const leaveDays = approvedLeaves.reduce(
+        (total, leave) => total + countWorkingLeaveDays(leave.startDate, leave.endDate, periodStart, periodEnd, isNonWorkingDay),
+        0
+      );
       const leaveDeductionDays = Math.max(0, leaveDays - leaveFreeDays);
 
       const approvedOvertimes = await tx.overtimeRequest.findMany({
@@ -242,4 +256,26 @@ async function ensurePayrollComponent(
       defaultAmount
     }
   });
+}
+
+function countWorkingLeaveDays(
+  leaveStart: Date,
+  leaveEnd: Date,
+  periodStart: Date,
+  periodEnd: Date,
+  isNonWorkingDay: (date: Date) => boolean
+) {
+  let total = 0;
+  let cursor = new Date(Math.max(startOfDay(leaveStart).getTime(), startOfDay(periodStart).getTime()));
+  const end = new Date(Math.min(startOfDay(leaveEnd).getTime(), startOfDay(periodEnd).getTime()));
+
+  while (cursor <= end) {
+    if (!isNonWorkingDay(cursor)) {
+      total += 1;
+    }
+
+    cursor = addDays(cursor, 1);
+  }
+
+  return total;
 }
