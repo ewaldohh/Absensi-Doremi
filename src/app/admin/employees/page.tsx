@@ -1,7 +1,7 @@
 import { AppShell } from "@/components/app-shell";
+import { EmployeeManagement } from "@/components/employee-management";
 import { requireRole, requireUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
-import { titleCaseEnum } from "@/lib/format";
 
 type EmployeesPageProps = {
   searchParams: Promise<{
@@ -94,132 +94,25 @@ export default async function EmployeesPage({ searchParams }: EmployeesPageProps
           </button>
         </form>
 
-        <section>
-          <div className="section-title">
-            <h2>Daftar Karyawan</h2>
-          </div>
-          <div className="table-wrap">
-            <table>
-              <thead>
-                <tr>
-                  <th>Nama</th>
-                  <th>Email</th>
-                  <th>Tipe</th>
-                  <th>Cabang</th>
-                  <th>Status</th>
-                  <th>Aksi</th>
-                </tr>
-              </thead>
-              <tbody>
-                {employees.map((employee) => (
-                  <tr key={employee.id}>
-                    <td data-label="Nama">{employee.fullName}</td>
-                    <td data-label="Email">{employee.user.email}</td>
-                    <td data-label="Tipe">{titleCaseEnum(employee.employmentType)}</td>
-                    <td data-label="Cabang">{employee.defaultBranch?.name ?? "-"}</td>
-                    <td data-label="Status">
-                      <span className={`status ${employee.isActive ? "good" : "bad"}`}>
-                        {employee.isActive ? "Aktif" : "Nonaktif"}
-                      </span>
-                    </td>
-                    <td data-label="Aksi">
-                      <details className="action-details">
-                        <summary className="button secondary action-summary">Kelola</summary>
-                        <div className="action-panel">
-                          <form className="form-grid" action="/api/employees" method="post">
-                            <input type="hidden" name="action" value="update" />
-                            <input type="hidden" name="employeeId" value={employee.id} />
-                            <section className="grid three">
-                              <label className="field">
-                                <span>Nama</span>
-                                <input name="fullName" defaultValue={employee.fullName} required />
-                              </label>
-                              <label className="field">
-                                <span>Email</span>
-                                <input name="email" type="email" defaultValue={employee.user.email} required />
-                              </label>
-                              <label className="field">
-                                <span>Kode</span>
-                                <input name="employeeCode" defaultValue={employee.employeeCode} required />
-                              </label>
-                              <label className="field">
-                                <span>Role akses</span>
-                                <select name="role" defaultValue={employee.user.role}>
-                                  <option value="EMPLOYEE">Employee</option>
-                                  <option value="ADMIN">Admin</option>
-                                  <option value="OWNER">Owner</option>
-                                </select>
-                              </label>
-                              <label className="field">
-                                <span>Tipe karyawan</span>
-                                <select name="employmentType" defaultValue={employee.employmentType}>
-                                  <option value="FULL_TIME">Full time</option>
-                                  <option value="PART_TIME">Part time</option>
-                                  <option value="SUPPORT">Support</option>
-                                  <option value="OTHER">Other</option>
-                                </select>
-                              </label>
-                              <label className="field">
-                                <span>Cabang</span>
-                                <select name="branchId" defaultValue={employee.defaultBranchId ?? ""}>
-                                  <option value="">Tanpa cabang</option>
-                                  {branches.map((branch) => (
-                                    <option key={branch.id} value={branch.id}>
-                                      {branch.name}
-                                    </option>
-                                  ))}
-                                </select>
-                              </label>
-                              <label className="field">
-                                <span>No. HP</span>
-                                <input name="phone" defaultValue={employee.phone ?? ""} />
-                              </label>
-                              <label className="field">
-                                <span>Status</span>
-                                <select name="isActive" defaultValue={String(employee.isActive)}>
-                                  <option value="true">Aktif</option>
-                                  <option value="false">Nonaktif</option>
-                                </select>
-                              </label>
-                            </section>
-                            <button className="button secondary" type="submit">
-                              Simpan Perubahan
-                            </button>
-                          </form>
-
-                          <section className="action-panel-footer">
-                            <form className="action-panel-section" action="/api/employees" method="post">
-                              <h3>Reset Password</h3>
-                              <input type="hidden" name="action" value="reset-password" />
-                              <input type="hidden" name="employeeId" value={employee.id} />
-                              <label className="field">
-                                <span>Password baru</span>
-                                <input name="password" type="text" defaultValue="bimba123" required />
-                              </label>
-                              <button className="button secondary" type="submit">
-                                Reset Password
-                              </button>
-                            </form>
-
-                            <form className="action-panel-section" action="/api/employees" method="post">
-                              <h3>Hapus Karyawan</h3>
-                              <input type="hidden" name="action" value="delete" />
-                              <input type="hidden" name="employeeId" value={employee.id} />
-                              <p>Karyawan akan dinonaktifkan agar riwayat absensi dan payroll lama tetap aman.</p>
-                              <button className="button danger" type="submit">
-                                Hapus / Nonaktifkan
-                              </button>
-                            </form>
-                          </section>
-                        </div>
-                      </details>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </section>
+        <EmployeeManagement
+          branches={branches.map((branch) => ({
+            id: branch.id,
+            name: branch.name
+          }))}
+          employees={employees.map((employee) => ({
+            id: employee.id,
+            fullName: employee.fullName,
+            email: employee.user.email,
+            employeeCode: employee.employeeCode,
+            role: employee.user.role,
+            employmentType: employee.employmentType,
+            defaultBranchId: employee.defaultBranchId ?? "",
+            defaultBranchName: employee.defaultBranch?.name ?? "",
+            phone: employee.phone ?? "",
+            isActive: employee.isActive,
+            isCurrentUser: employee.userId === user.id
+          }))}
+        />
       </section>
     </AppShell>
   );
