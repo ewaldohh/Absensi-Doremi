@@ -1,7 +1,7 @@
 import { AppShell } from "@/components/app-shell";
 import { requireRole, requireUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
-import { formatDate, formatDateTime, titleCaseEnum } from "@/lib/format";
+import { formatDate, formatDateTime, formatTime, titleCaseEnum } from "@/lib/format";
 
 export default async function ApprovalsPage() {
   const user = await requireUser();
@@ -34,8 +34,11 @@ export default async function ApprovalsPage() {
             id: item.id,
             type: "correction",
             employeeName: item.employee.fullName,
-            date: formatDateTime(item.requestedTime),
-            detail: `${titleCaseEnum(item.correctionType)} - ${item.reason}`,
+            date: formatDate(item.correctionDate),
+            detail:
+              item.requestedCheckIn || item.requestedCheckOut
+                ? `Masuk ${formatOptionalTime(item.requestedCheckIn)} / Pulang ${formatOptionalTime(item.requestedCheckOut)} - ${item.reason}`
+                : `${titleCaseEnum(item.correctionType)} ${formatDateTime(item.requestedTime)} - ${item.reason}`,
             evidence: item.evidenceFileUrl
           }))}
         />
@@ -64,6 +67,10 @@ export default async function ApprovalsPage() {
       </section>
     </AppShell>
   );
+}
+
+function formatOptionalTime(value: Date | null) {
+  return value ? formatTime(value) : "-";
 }
 
 function ApprovalTable({

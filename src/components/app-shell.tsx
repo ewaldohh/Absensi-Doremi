@@ -2,6 +2,7 @@ import {
   Banknote,
   CalendarDays,
   ClipboardCheck,
+  FileText,
   LayoutDashboard,
   LogOut,
   QrCode,
@@ -75,6 +76,10 @@ export function AppShell({ user, title, subtitle, actions, children }: AppShellP
               <a className="nav-link" href="/admin/payroll-components">
                 <Settings2 />
                 Komponen
+              </a>
+              <a className="nav-link" href="/admin/reports">
+                <FileText />
+                Rekap
               </a>
               <a className="nav-link" href="/admin/settings">
                 <SlidersHorizontal />

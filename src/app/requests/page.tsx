@@ -1,7 +1,7 @@
 import { AppShell } from "@/components/app-shell";
 import { requireUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
-import { formatDate, formatDateTime, titleCaseEnum } from "@/lib/format";
+import { formatDate, formatDateTime, formatTime, titleCaseEnum } from "@/lib/format";
 import { toDateInputValue } from "@/lib/dates";
 
 export default async function RequestsPage() {
@@ -12,26 +12,66 @@ export default async function RequestsPage() {
     ? await Promise.all([
         prisma.schedule.findMany({
           where: { employeeId: employee.id },
+          include: { branch: true },
           orderBy: { scheduleDate: "desc" },
           take: 20
         }),
         prisma.attendanceCorrection.findMany({
           where: { employeeId: employee.id },
           orderBy: { createdAt: "desc" },
-          take: 10
+          take: 30
         }),
         prisma.leaveRequest.findMany({
           where: { employeeId: employee.id },
           orderBy: { createdAt: "desc" },
-          take: 10
+          take: 30
         }),
         prisma.overtimeRequest.findMany({
           where: { employeeId: employee.id },
           orderBy: { createdAt: "desc" },
-          take: 10
+          take: 30
         })
       ])
     : [[], [], [], []];
+
+  const requestRows = [
+    ...corrections.map((item) => ({
+      id: item.id,
+      date: item.createdAt,
+      type: "Koreksi Absensi",
+      period: formatDate(item.correctionDate),
+      detail:
+        item.requestedCheckIn || item.requestedCheckOut
+          ? `Masuk ${formatOptionalTime(item.requestedCheckIn)} / Pulang ${formatOptionalTime(item.requestedCheckOut)}`
+          : `${titleCaseEnum(item.correctionType)} ${formatDateTime(item.requestedTime)}`,
+      reason: item.reason,
+      status: item.status,
+      reviewedAt: item.reviewedAt,
+      reviewNotes: item.reviewNotes
+    })),
+    ...leaves.map((item) => ({
+      id: item.id,
+      date: item.createdAt,
+      type: titleCaseEnum(item.leaveType),
+      period: `${formatDate(item.startDate)} - ${formatDate(item.endDate)}`,
+      detail: `${item.totalDays} hari`,
+      reason: item.reason,
+      status: item.status,
+      reviewedAt: item.reviewedAt,
+      reviewNotes: item.reviewNotes
+    })),
+    ...overtimes.map((item) => ({
+      id: item.id,
+      date: item.createdAt,
+      type: "Lembur",
+      period: formatDate(item.overtimeDate),
+      detail: `${formatTime(item.startTime)} - ${formatTime(item.endTime)} (${item.totalMinutes} menit)`,
+      reason: item.reason,
+      status: item.status,
+      reviewedAt: item.reviewedAt,
+      reviewNotes: item.reviewNotes
+    }))
+  ].sort((a, b) => b.date.getTime() - a.date.getTime());
 
   return (
     <AppShell user={user} title="Pengajuan" subtitle="Koreksi absensi, izin/sakit, dan lembur.">
@@ -49,7 +89,7 @@ export default async function RequestsPage() {
                   <option value="">Tanpa jadwal</option>
                   {schedules.map((schedule) => (
                     <option key={schedule.id} value={schedule.id}>
-                      {formatDate(schedule.scheduleDate)}
+                      {formatDate(schedule.scheduleDate)} - {formatTime(schedule.startTime)} ({schedule.branch.name})
                     </option>
                   ))}
                 </select>
@@ -59,15 +99,12 @@ export default async function RequestsPage() {
                 <input name="correctionDate" type="date" defaultValue={toDateInputValue(new Date())} required />
               </label>
               <label className="field">
-                <span>Tipe</span>
-                <select name="correctionType">
-                  <option value="CHECK_IN">Masuk</option>
-                  <option value="CHECK_OUT">Pulang</option>
-                </select>
+                <span>Jam Masuk</span>
+                <input name="checkInTime" type="time" required />
               </label>
               <label className="field">
-                <span>Jam</span>
-                <input name="requestedTime" type="time" required />
+                <span>Jam Pulang</span>
+                <input name="checkOutTime" type="time" required />
               </label>
               <label className="field">
                 <span>Bukti</span>
@@ -146,47 +183,45 @@ export default async function RequestsPage() {
               <table>
                 <thead>
                   <tr>
-                    <th>Tanggal</th>
+                    <th>Diajukan</th>
                     <th>Jenis</th>
+                    <th>Periode</th>
                     <th>Detail</th>
+                    <th>Alasan</th>
                     <th>Status</th>
+                    <th>Review</th>
                   </tr>
                 </thead>
                 <tbody>
-                  {[
-                    ...corrections.map((item) => ({
-                      id: item.id,
-                      date: item.createdAt,
-                      type: "Koreksi",
-                      detail: `${titleCaseEnum(item.correctionType)} ${formatDateTime(item.requestedTime)}`,
-                      status: item.status
-                    })),
-                    ...leaves.map((item) => ({
-                      id: item.id,
-                      date: item.createdAt,
-                      type: titleCaseEnum(item.leaveType),
-                      detail: `${formatDate(item.startDate)} - ${formatDate(item.endDate)}`,
-                      status: item.status
-                    })),
-                    ...overtimes.map((item) => ({
-                      id: item.id,
-                      date: item.createdAt,
-                      type: "Lembur",
-                      detail: `${item.totalMinutes} menit`,
-                      status: item.status
-                    }))
-                  ].map((item) => (
+                  {requestRows.map((item) => (
                     <tr key={`${item.type}-${item.id}`}>
                       <td>{formatDateTime(item.date)}</td>
                       <td>{item.type}</td>
+                      <td>{item.period}</td>
                       <td>{item.detail}</td>
+                      <td>{item.reason}</td>
                       <td>
                         <span className={`status ${item.status === "APPROVED" ? "good" : item.status === "REJECTED" ? "bad" : "warn"}`}>
                           {titleCaseEnum(item.status)}
                         </span>
                       </td>
+                      <td>
+                        {item.reviewedAt ? (
+                          <>
+                            {formatDateTime(item.reviewedAt)}
+                            {item.reviewNotes ? ` - ${item.reviewNotes}` : ""}
+                          </>
+                        ) : (
+                          "Menunggu review"
+                        )}
+                      </td>
                     </tr>
                   ))}
+                  {requestRows.length === 0 ? (
+                    <tr>
+                      <td colSpan={7}>Belum ada riwayat pengajuan.</td>
+                    </tr>
+                  ) : null}
                 </tbody>
               </table>
             </div>
@@ -195,4 +230,8 @@ export default async function RequestsPage() {
       )}
     </AppShell>
   );
+}
+
+function formatOptionalTime(value: Date | null) {
+  return value ? formatTime(value) : "-";
 }

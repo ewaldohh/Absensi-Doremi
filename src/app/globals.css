@@ -575,6 +575,10 @@ button {
   grid-template-columns: repeat(3, minmax(0, 1fr));
 }
 
+.grid.four {
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+}
+
 .card {
   border: 1px solid var(--line);
   border-radius: 8px;
@@ -748,7 +752,8 @@ tr:last-child td {
   .login-panel,
   .app-shell,
   .grid.two,
-  .grid.three {
+  .grid.three,
+  .grid.four {
     grid-template-columns: 1fr;
   }
 

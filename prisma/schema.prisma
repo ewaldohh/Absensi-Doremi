@@ -251,6 +251,8 @@ model AttendanceCorrection {
   correctionDate  DateTime
   correctionType  CorrectionType
   requestedTime   DateTime
+  requestedCheckIn DateTime?
+  requestedCheckOut DateTime?
   reason          String
   evidenceFileUrl String?
   status          RequestStatus  @default(PENDING)

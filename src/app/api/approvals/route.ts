@@ -36,17 +36,58 @@ export async function POST(request: Request) {
       const branchId = correction.schedule?.branchId ?? correction.employee.defaultBranchId;
 
       if (branchId) {
-        await prisma.attendanceEvent.create({
-          data: {
+        const correctedEvents: Array<{
+          employeeId: string;
+          branchId: string;
+          scheduleId: string | null;
+          eventType: "CHECK_IN" | "CHECK_OUT";
+          eventTime: Date;
+          source: "MANUAL_CORRECTION";
+          status: "VALID";
+          notes: string;
+        }> = [];
+
+        if (correction.requestedCheckIn) {
+          correctedEvents.push({
+            employeeId: correction.employeeId,
+            branchId,
+            scheduleId: correction.scheduleId,
+            eventType: "CHECK_IN" as const,
+            eventTime: correction.requestedCheckIn,
+            source: "MANUAL_CORRECTION" as const,
+            status: "VALID" as const,
+            notes: `Approved correction: ${correction.reason}`
+          });
+        }
+
+        if (correction.requestedCheckOut) {
+          correctedEvents.push({
+            employeeId: correction.employeeId,
+            branchId,
+            scheduleId: correction.scheduleId,
+            eventType: "CHECK_OUT" as const,
+            eventTime: correction.requestedCheckOut,
+            source: "MANUAL_CORRECTION" as const,
+            status: "VALID" as const,
+            notes: `Approved correction: ${correction.reason}`
+          });
+        }
+
+        if (correctedEvents.length === 0) {
+          correctedEvents.push({
             employeeId: correction.employeeId,
             branchId,
             scheduleId: correction.scheduleId,
             eventType: correction.correctionType,
             eventTime: correction.requestedTime,
-            source: "MANUAL_CORRECTION",
-            status: "VALID",
+            source: "MANUAL_CORRECTION" as const,
+            status: "VALID" as const,
             notes: `Approved correction: ${correction.reason}`
-          }
+          });
+        }
+
+        await prisma.attendanceEvent.createMany({
+          data: correctedEvents
         });
       }
     }

@@ -12,7 +12,7 @@ export default async function AttendancePage() {
   const todayStart = startOfDay(new Date());
   const todayEnd = endOfDay(new Date());
 
-  const [schedules, events] = employee
+  const [schedules, events, historyEvents] = employee
     ? await Promise.all([
         prisma.schedule.findMany({
           where: {
@@ -29,9 +29,17 @@ export default async function AttendancePage() {
           },
           include: { branch: true },
           orderBy: { eventTime: "desc" }
+        }),
+        prisma.attendanceEvent.findMany({
+          where: {
+            employeeId: employee.id
+          },
+          include: { branch: true },
+          orderBy: { eventTime: "desc" },
+          take: 40
         })
       ])
-    : [[], []];
+    : [[], [], []];
 
   return (
     <AppShell user={user} title="Absensi" subtitle="Check-in dan check-out menggunakan QR cabang.">
@@ -112,6 +120,45 @@ export default async function AttendancePage() {
                   </tbody>
                 </table>
               </div>
+            </div>
+          </section>
+
+          <section>
+            <div className="section-title">
+              <h2>Riwayat Absensi Saya</h2>
+            </div>
+            <div className="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Waktu</th>
+                    <th>Tipe</th>
+                    <th>Cabang</th>
+                    <th>Sumber</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {historyEvents.map((event) => (
+                    <tr key={event.id}>
+                      <td>{formatDateTime(event.eventTime)}</td>
+                      <td>{titleCaseEnum(event.eventType)}</td>
+                      <td>{event.branch.name}</td>
+                      <td>{titleCaseEnum(event.source)}</td>
+                      <td>
+                        <span className={`status ${event.status === "VALID" ? "good" : event.status === "REJECTED" ? "bad" : "warn"}`}>
+                          {titleCaseEnum(event.status)}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                  {historyEvents.length === 0 ? (
+                    <tr>
+                      <td colSpan={5}>Belum ada riwayat absensi.</td>
+                    </tr>
+                  ) : null}
+                </tbody>
+              </table>
             </div>
           </section>
         </div>
