@@ -89,12 +89,10 @@ function NavLinks({ role }: { role: CurrentUser["role"] }) {
         <ClipboardCheck />
         Pengajuan
       </a>
-      {role !== "ADMIN" ? (
-        <a className="nav-link" href="/payroll">
-          <Banknote />
-          Payroll
-        </a>
-      ) : null}
+      <a className="nav-link" href="/payroll">
+        <Banknote />
+        Payroll
+      </a>
       {isAdmin ? (
         <>
           <a className="nav-link" href="/admin/qr">

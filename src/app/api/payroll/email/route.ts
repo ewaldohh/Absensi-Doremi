@@ -7,8 +7,12 @@ import { formatDate, formatRupiah } from "@/lib/format";
 export async function POST(request: Request) {
   const user = await getCurrentUser();
 
-  if (!user || (user.role !== "ADMIN" && user.role !== "OWNER")) {
+  if (!user) {
     return NextResponse.redirect(new URL("/login", request.url), 303);
+  }
+
+  if (user.role !== "OWNER") {
+    return NextResponse.redirect(new URL("/payroll?error=Hanya owner yang dapat mengirim slip payroll massal.", request.url), 303);
   }
 
   const formData = await request.formData();

@@ -14,10 +14,10 @@ type PayrollPageProps = {
 export default async function PayrollPage({ searchParams }: PayrollPageProps) {
   const user = await requireUser();
   const params = await searchParams;
-  const isAdmin = user.role === "ADMIN" || user.role === "OWNER";
+  const isOwner = user.role === "OWNER";
 
   const [runs, myItems] = await Promise.all([
-    isAdmin
+    isOwner
       ? prisma.payrollRun.findMany({
           include: {
             items: {
@@ -44,11 +44,11 @@ export default async function PayrollPage({ searchParams }: PayrollPageProps) {
   ]);
 
   return (
-    <AppShell user={user} title="Payroll" subtitle="Payroll periode 29 sampai 29 dan slip per karyawan.">
+    <AppShell user={user} title="Payroll" subtitle={isOwner ? "Payroll periode 29 sampai 29 dan slip per karyawan." : "Slip payroll Anda."}>
       {params.error ? <div className="notice error" style={{ marginBottom: 16 }}>{params.error}</div> : null}
       {params.success ? <div className="notice" style={{ marginBottom: 16 }}>{params.success}</div> : null}
 
-      {isAdmin ? (
+      {isOwner ? (
         <section className="card pad stack">
           <form className="split-actions" action="/api/payroll/generate" method="post">
             <label className="field" style={{ minWidth: 260 }}>
@@ -62,7 +62,7 @@ export default async function PayrollPage({ searchParams }: PayrollPageProps) {
         </section>
       ) : null}
 
-      {isAdmin ? (
+      {isOwner ? (
         <section style={{ marginTop: 20 }}>
           <div className="section-title">
             <h2>Payroll Run</h2>
@@ -125,51 +125,51 @@ export default async function PayrollPage({ searchParams }: PayrollPageProps) {
             {runs.length === 0 ? <div className="empty-state">Belum ada payroll run.</div> : null}
           </div>
         </section>
-      ) : (
-        <section>
-          <div className="section-title">
-            <h2>Slip Saya</h2>
-          </div>
-          <div className="grid">
-            {myItems.map((item) => (
-              <div className="card pad stack" key={item.id}>
-                <div className="split-actions">
-                  <div>
-                    <h2 style={{ margin: 0 }}>
-                      {formatDate(item.payrollRun.periodStart)} - {formatDate(item.payrollRun.periodEnd)}
-                    </h2>
-                    <p style={{ color: "var(--muted)", margin: "6px 0 0" }}>{titleCaseEnum(item.status)}</p>
-                  </div>
-                  <strong style={{ fontSize: "1.4rem" }}>{formatRupiah(item.netPay)}</strong>
+      ) : null}
+
+      <section style={{ marginTop: isOwner ? 20 : 0 }}>
+        <div className="section-title">
+          <h2>Slip Saya</h2>
+        </div>
+        <div className="grid">
+          {myItems.map((item) => (
+            <div className="card pad stack" key={item.id}>
+              <div className="split-actions">
+                <div>
+                  <h2 style={{ margin: 0 }}>
+                    {formatDate(item.payrollRun.periodStart)} - {formatDate(item.payrollRun.periodEnd)}
+                  </h2>
+                  <p style={{ color: "var(--muted)", margin: "6px 0 0" }}>{titleCaseEnum(item.status)}</p>
                 </div>
-                <div className="table-wrap">
-                  <table>
-                    <thead>
-                      <tr>
-                        <th>Komponen</th>
-                        <th>Tipe</th>
-                        <th>Qty</th>
-                        <th>Amount</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {item.lines.map((line) => (
-                        <tr key={line.id}>
-                          <td data-label="Komponen">{line.componentName}</td>
-                          <td data-label="Tipe">{titleCaseEnum(line.componentType)}</td>
-                          <td data-label="Qty">{line.quantity}</td>
-                          <td data-label="Amount">{formatRupiah(line.amount)}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
+                <strong style={{ fontSize: "1.4rem" }}>{formatRupiah(item.netPay)}</strong>
               </div>
-            ))}
-            {myItems.length === 0 ? <div className="empty-state">Belum ada slip payroll.</div> : null}
-          </div>
-        </section>
-      )}
+              <div className="table-wrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>Komponen</th>
+                      <th>Tipe</th>
+                      <th>Qty</th>
+                      <th>Amount</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {item.lines.map((line) => (
+                      <tr key={line.id}>
+                        <td data-label="Komponen">{line.componentName}</td>
+                        <td data-label="Tipe">{titleCaseEnum(line.componentType)}</td>
+                        <td data-label="Qty">{line.quantity}</td>
+                        <td data-label="Amount">{formatRupiah(line.amount)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          ))}
+          {myItems.length === 0 ? <div className="empty-state">Belum ada slip payroll.</div> : null}
+        </div>
+      </section>
     </AppShell>
   );
 }
