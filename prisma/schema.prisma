@@ -1,0 +1,418 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/generated/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+enum Role {
+  EMPLOYEE
+  ADMIN
+  OWNER
+}
+
+enum EmploymentType {
+  FULL_TIME
+  PART_TIME
+  SUPPORT
+  OTHER
+}
+
+enum ScheduleType {
+  TEACHING
+  OPERATIONAL
+  ADMIN
+  SUBSTITUTE
+  OTHER
+}
+
+enum ScheduleStatus {
+  SCHEDULED
+  CHANGED
+  CANCELLED
+}
+
+enum QrTokenStatus {
+  ACTIVE
+  EXPIRED
+  REVOKED
+}
+
+enum AttendanceEventType {
+  CHECK_IN
+  CHECK_OUT
+}
+
+enum AttendanceSource {
+  QR_GPS
+  MANUAL_CORRECTION
+  ADMIN_ADJUSTMENT
+}
+
+enum AttendanceStatus {
+  VALID
+  PENDING_REVIEW
+  REJECTED
+  CORRECTED
+}
+
+enum CorrectionType {
+  CHECK_IN
+  CHECK_OUT
+}
+
+enum RequestStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum LeaveType {
+  PERMISSION
+  SICK
+}
+
+enum PayrollComponentType {
+  EARNING
+  DEDUCTION
+}
+
+enum PayrollCalculationType {
+  FIXED
+  PER_DAY
+  PER_HOUR
+  PER_SESSION
+  FORMULA
+}
+
+enum PayrollRunStatus {
+  DRAFT
+  REVIEWED
+  PUBLISHED
+}
+
+enum PayrollItemStatus {
+  DRAFT
+  PUBLISHED
+}
+
+enum EmailStatus {
+  NOT_SENT
+  PENDING
+  SENT
+  FAILED
+}
+
+enum PayrollLineSource {
+  MANUAL
+  ATTENDANCE
+  OVERTIME
+  LEAVE
+  SYSTEM
+}
+
+model User {
+  id           String    @id @default(cuid())
+  name         String
+  email        String    @unique
+  passwordHash String
+  role         Role      @default(EMPLOYEE)
+  isActive     Boolean   @default(true)
+  employee     Employee?
+  sessions     Session[]
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+}
+
+model Session {
+  id        String   @id @default(cuid())
+  userId    String
+  tokenHash String   @unique
+  expiresAt DateTime
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+model Employee {
+  id                    String                     @id @default(cuid())
+  userId                String                     @unique
+  employeeCode          String                     @unique
+  fullName              String
+  phone                 String?
+  employmentType        EmploymentType             @default(OTHER)
+  defaultBranchId       String?
+  startDate             DateTime?
+  endDate               DateTime?
+  isActive              Boolean                    @default(true)
+  user                  User                       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  defaultBranch         Branch?                    @relation(fields: [defaultBranchId], references: [id])
+  schedules             Schedule[]
+  attendanceEvents      AttendanceEvent[]
+  attendanceCorrections AttendanceCorrection[]
+  leaveRequests         LeaveRequest[]
+  overtimeRequests      OvertimeRequest[]
+  payrollComponents     EmployeePayrollComponent[]
+  payrollItems          PayrollItem[]
+  createdAt             DateTime                   @default(now())
+  updatedAt             DateTime                   @updatedAt
+
+  @@index([defaultBranchId])
+}
+
+model Branch {
+  id               String            @id @default(cuid())
+  name             String
+  address          String?
+  latitude         Float
+  longitude        Float
+  gpsRadiusMeters  Int               @default(100)
+  isActive         Boolean           @default(true)
+  employees        Employee[]
+  schedules        Schedule[]
+  qrTokens         QrToken[]
+  attendanceEvents AttendanceEvent[]
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+}
+
+model Schedule {
+  id                    String                 @id @default(cuid())
+  employeeId            String
+  branchId              String
+  scheduleDate          DateTime
+  startTime             DateTime
+  endTime               DateTime
+  scheduleType          ScheduleType           @default(OTHER)
+  status                ScheduleStatus         @default(SCHEDULED)
+  notes                 String?
+  createdBy             String?
+  updatedBy             String?
+  employee              Employee               @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  branch                Branch                 @relation(fields: [branchId], references: [id])
+  attendanceEvents      AttendanceEvent[]
+  attendanceCorrections AttendanceCorrection[]
+  overtimeRequests      OvertimeRequest[]
+  createdAt             DateTime               @default(now())
+  updatedAt             DateTime               @updatedAt
+
+  @@index([employeeId, scheduleDate])
+  @@index([branchId, scheduleDate])
+}
+
+model QrToken {
+  id               String            @id @default(cuid())
+  branchId         String
+  tokenHash        String            @unique
+  validFrom        DateTime
+  validUntil       DateTime
+  status           QrTokenStatus     @default(ACTIVE)
+  branch           Branch            @relation(fields: [branchId], references: [id], onDelete: Cascade)
+  attendanceEvents AttendanceEvent[]
+  createdAt        DateTime          @default(now())
+
+  @@index([branchId, validUntil])
+}
+
+model AttendanceEvent {
+  id             String              @id @default(cuid())
+  employeeId     String
+  branchId       String
+  scheduleId     String?
+  eventType      AttendanceEventType
+  eventTime      DateTime            @default(now())
+  source         AttendanceSource    @default(QR_GPS)
+  qrTokenId      String?
+  latitude       Float?
+  longitude      Float?
+  distanceMeters Float?
+  status         AttendanceStatus    @default(VALID)
+  notes          String?
+  employee       Employee            @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  branch         Branch              @relation(fields: [branchId], references: [id])
+  schedule       Schedule?           @relation(fields: [scheduleId], references: [id])
+  qrToken        QrToken?            @relation(fields: [qrTokenId], references: [id])
+  createdAt      DateTime            @default(now())
+  updatedAt      DateTime            @updatedAt
+
+  @@index([employeeId, eventTime])
+  @@index([branchId, eventTime])
+  @@index([scheduleId])
+}
+
+model AttendanceCorrection {
+  id              String         @id @default(cuid())
+  employeeId      String
+  scheduleId      String?
+  correctionDate  DateTime
+  correctionType  CorrectionType
+  requestedTime   DateTime
+  reason          String
+  evidenceFileUrl String?
+  status          RequestStatus  @default(PENDING)
+  reviewedBy      String?
+  reviewedAt      DateTime?
+  reviewNotes     String?
+  employee        Employee       @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  schedule        Schedule?      @relation(fields: [scheduleId], references: [id])
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+
+  @@index([employeeId, correctionDate])
+  @@index([status])
+}
+
+model LeaveRequest {
+  id              String        @id @default(cuid())
+  employeeId      String
+  leaveType       LeaveType
+  startDate       DateTime
+  endDate         DateTime
+  totalDays       Int
+  reason          String
+  evidenceFileUrl String?
+  status          RequestStatus @default(PENDING)
+  reviewedBy      String?
+  reviewedAt      DateTime?
+  reviewNotes     String?
+  employee        Employee      @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@index([employeeId, startDate])
+  @@index([status])
+}
+
+model OvertimeRequest {
+  id           String        @id @default(cuid())
+  employeeId   String
+  scheduleId   String?
+  overtimeDate DateTime
+  startTime    DateTime
+  endTime      DateTime
+  totalMinutes Int
+  reason       String
+  status       RequestStatus @default(PENDING)
+  reviewedBy   String?
+  reviewedAt   DateTime?
+  reviewNotes  String?
+  employee     Employee      @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  schedule     Schedule?     @relation(fields: [scheduleId], references: [id])
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  @@index([employeeId, overtimeDate])
+  @@index([status])
+}
+
+model PayrollComponent {
+  id                 String                     @id @default(cuid())
+  name               String
+  componentType      PayrollComponentType
+  calculationType    PayrollCalculationType     @default(FIXED)
+  defaultAmount      Int                        @default(0)
+  isTaxable          Boolean                    @default(false)
+  isActive           Boolean                    @default(true)
+  employeeComponents EmployeePayrollComponent[]
+  payrollLines       PayrollItemLine[]
+  createdAt          DateTime                   @default(now())
+  updatedAt          DateTime                   @updatedAt
+}
+
+model EmployeePayrollComponent {
+  id                 String           @id @default(cuid())
+  employeeId         String
+  payrollComponentId String
+  amount             Int?
+  effectiveFrom      DateTime?
+  effectiveUntil     DateTime?
+  isActive           Boolean          @default(true)
+  employee           Employee         @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+  payrollComponent   PayrollComponent @relation(fields: [payrollComponentId], references: [id], onDelete: Cascade)
+  createdAt          DateTime         @default(now())
+  updatedAt          DateTime         @updatedAt
+
+  @@index([employeeId])
+  @@index([payrollComponentId])
+}
+
+model PayrollRun {
+  id          String           @id @default(cuid())
+  periodStart DateTime
+  periodEnd   DateTime
+  status      PayrollRunStatus @default(DRAFT)
+  generatedBy String?
+  generatedAt DateTime         @default(now())
+  publishedBy String?
+  publishedAt DateTime?
+  items       PayrollItem[]
+  createdAt   DateTime         @default(now())
+  updatedAt   DateTime         @updatedAt
+
+  @@index([periodStart, periodEnd])
+}
+
+model PayrollItem {
+  id              String            @id @default(cuid())
+  payrollRunId    String
+  employeeId      String
+  grossEarnings   Int               @default(0)
+  totalDeductions Int               @default(0)
+  netPay          Int               @default(0)
+  status          PayrollItemStatus @default(DRAFT)
+  emailStatus     EmailStatus       @default(NOT_SENT)
+  emailSentAt     DateTime?
+  payrollRun      PayrollRun        @relation(fields: [payrollRunId], references: [id], onDelete: Cascade)
+  employee        Employee          @relation(fields: [employeeId], references: [id])
+  lines           PayrollItemLine[]
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+
+  @@index([payrollRunId])
+  @@index([employeeId])
+}
+
+model PayrollItemLine {
+  id                 String               @id @default(cuid())
+  payrollItemId      String
+  payrollComponentId String?
+  componentName      String
+  componentType      PayrollComponentType
+  quantity           Float                @default(1)
+  rate               Int                  @default(0)
+  amount             Int                  @default(0)
+  sourceType         PayrollLineSource    @default(MANUAL)
+  sourceId           String?
+  notes              String?
+  payrollItem        PayrollItem          @relation(fields: [payrollItemId], references: [id], onDelete: Cascade)
+  payrollComponent   PayrollComponent?    @relation(fields: [payrollComponentId], references: [id])
+  createdAt          DateTime             @default(now())
+
+  @@index([payrollItemId])
+}
+
+model AuditLog {
+  id          String   @id @default(cuid())
+  actorUserId String?
+  action      String
+  entityType  String
+  entityId    String
+  beforeJson  String?
+  afterJson   String?
+  createdAt   DateTime @default(now())
+
+  @@index([actorUserId])
+  @@index([entityType, entityId])
+}
+
+model AppSetting {
+  key       String   @id
+  value     String
+  updatedBy String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
