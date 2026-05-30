@@ -7,6 +7,7 @@ Dokumen awal:
 - `docs/requirements.md`: requirement bisnis.
 - `docs/architecture.md`: rancangan arsitektur MVP.
 - `docs/data-model.md`: rancangan model data awal.
+- `docs/deploy-vercel-supabase.md`: langkah deploy testing internal ke Vercel dan Supabase.
 
 Fokus sistem:
 
@@ -22,7 +23,7 @@ Fokus sistem:
 Stack saat ini:
 
 - Next.js PWA.
-- SQLite lokal untuk development.
+- PostgreSQL untuk deployment.
 - Prisma 7.
 - QR dinamis 30 detik.
 - Validasi GPS cabang.
@@ -35,10 +36,10 @@ Pastikan Node.js sudah terpasang. Di laptop ini Node.js sudah tersedia.
 
 ```bash
 npm.cmd install
-npm.cmd run db:push
-npm.cmd run db:seed
 npm.cmd run dev -- --hostname 127.0.0.1 --port 3000
 ```
+
+Isi `.env` dengan `DATABASE_URL` PostgreSQL/Supabase sebelum menjalankan fitur yang membutuhkan database.
 
 Buka:
 
