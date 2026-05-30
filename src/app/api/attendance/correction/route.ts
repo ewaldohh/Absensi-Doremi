@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
-import { combineDateAndTime } from "@/lib/dates";
+import { combineDateAndTime, startOfDateInput } from "@/lib/dates";
 import { saveUpload } from "@/lib/uploads";
 
 export async function POST(request: Request) {
@@ -30,7 +30,7 @@ export async function POST(request: Request) {
     data: {
       employeeId: user.employee.id,
       scheduleId: scheduleId || null,
-      correctionDate: new Date(`${correctionDate}T00:00:00`),
+      correctionDate: startOfDateInput(correctionDate),
       correctionType: "CHECK_IN",
       requestedTime: requestedCheckIn,
       requestedCheckIn,

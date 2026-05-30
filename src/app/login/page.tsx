@@ -38,7 +38,7 @@ export default async function LoginPage({
           <form className="stack" action="/api/auth/login" method="post">
             <div className="login-title">
               <h2>Masuk</h2>
-              <p>Gunakan akun demo atau akun yang sudah dibuat admin.</p>
+              <p>Gunakan yang sudah dibuat admin.</p>
             </div>
 
             {params.error ? <div className="notice">{params.error}</div> : null}
@@ -66,18 +66,6 @@ export default async function LoginPage({
               <LogIn />
             </button>
 
-            <div className="demo-accounts">
-              <div className="demo-icon">
-                <UsersRound />
-              </div>
-              <div>
-                Owner: owner@bimba.local / owner123
-                <br />
-                Admin: admin@bimba.local / admin123
-                <br />
-                Guru: guru@bimba.local / guru123
-              </div>
-            </div>
           </form>
         </div>
       </section>

@@ -1,77 +1,21 @@
 import { AppShell } from "@/components/app-shell";
 import { requireUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
-import { formatDate, formatDateTime, formatTime, titleCaseEnum } from "@/lib/format";
+import { formatDate, formatTime } from "@/lib/format";
 import { toDateInputValue } from "@/lib/dates";
 
 export default async function RequestsPage() {
   const user = await requireUser();
   const employee = user.employee;
 
-  const [schedules, corrections, leaves, overtimes] = employee
-    ? await Promise.all([
-        prisma.schedule.findMany({
-          where: { employeeId: employee.id },
-          include: { branch: true },
-          orderBy: { scheduleDate: "desc" },
-          take: 20
-        }),
-        prisma.attendanceCorrection.findMany({
-          where: { employeeId: employee.id },
-          orderBy: { createdAt: "desc" },
-          take: 30
-        }),
-        prisma.leaveRequest.findMany({
-          where: { employeeId: employee.id },
-          orderBy: { createdAt: "desc" },
-          take: 30
-        }),
-        prisma.overtimeRequest.findMany({
-          where: { employeeId: employee.id },
-          orderBy: { createdAt: "desc" },
-          take: 30
-        })
-      ])
-    : [[], [], [], []];
-
-  const requestRows = [
-    ...corrections.map((item) => ({
-      id: item.id,
-      date: item.createdAt,
-      type: "Koreksi Absensi",
-      period: formatDate(item.correctionDate),
-      detail:
-        item.requestedCheckIn || item.requestedCheckOut
-          ? `Masuk ${formatOptionalTime(item.requestedCheckIn)} / Pulang ${formatOptionalTime(item.requestedCheckOut)}`
-          : `${titleCaseEnum(item.correctionType)} ${formatDateTime(item.requestedTime)}`,
-      reason: item.reason,
-      status: item.status,
-      reviewedAt: item.reviewedAt,
-      reviewNotes: item.reviewNotes
-    })),
-    ...leaves.map((item) => ({
-      id: item.id,
-      date: item.createdAt,
-      type: titleCaseEnum(item.leaveType),
-      period: `${formatDate(item.startDate)} - ${formatDate(item.endDate)}`,
-      detail: `${item.totalDays} hari`,
-      reason: item.reason,
-      status: item.status,
-      reviewedAt: item.reviewedAt,
-      reviewNotes: item.reviewNotes
-    })),
-    ...overtimes.map((item) => ({
-      id: item.id,
-      date: item.createdAt,
-      type: "Lembur",
-      period: formatDate(item.overtimeDate),
-      detail: `${formatTime(item.startTime)} - ${formatTime(item.endTime)} (${item.totalMinutes} menit)`,
-      reason: item.reason,
-      status: item.status,
-      reviewedAt: item.reviewedAt,
-      reviewNotes: item.reviewNotes
-    }))
-  ].sort((a, b) => b.date.getTime() - a.date.getTime());
+  const schedules = employee
+    ? await prisma.schedule.findMany({
+        where: { employeeId: employee.id },
+        include: { branch: true },
+        orderBy: { scheduleDate: "desc" },
+        take: 20
+      })
+    : [];
 
   return (
     <AppShell user={user} title="Pengajuan" subtitle="Koreksi absensi, izin/sakit, dan lembur.">
@@ -79,6 +23,15 @@ export default async function RequestsPage() {
         <div className="empty-state">Akun ini belum terhubung ke data karyawan.</div>
       ) : (
         <div className="grid">
+          <nav className="subnav" aria-label="Sub menu pengajuan">
+            <a className="subnav-link active" href="/requests">
+              Buat Pengajuan
+            </a>
+            <a className="subnav-link" href="/requests/history">
+              Riwayat Pengajuan
+            </a>
+          </nav>
+
           <section className="grid three">
             <form className="card pad stack" action="/api/attendance/correction" method="post" encType="multipart/form-data">
               <h2 style={{ margin: 0 }}>Koreksi Absen</h2>
@@ -174,64 +127,8 @@ export default async function RequestsPage() {
               </button>
             </form>
           </section>
-
-          <section>
-            <div className="section-title">
-              <h2>Riwayat Pengajuan</h2>
-            </div>
-            <div className="table-wrap">
-              <table>
-                <thead>
-                  <tr>
-                    <th>Diajukan</th>
-                    <th>Jenis</th>
-                    <th>Periode</th>
-                    <th>Detail</th>
-                    <th>Alasan</th>
-                    <th>Status</th>
-                    <th>Review</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {requestRows.map((item) => (
-                    <tr key={`${item.type}-${item.id}`}>
-                      <td data-label="Diajukan">{formatDateTime(item.date)}</td>
-                      <td data-label="Jenis">{item.type}</td>
-                      <td data-label="Periode">{item.period}</td>
-                      <td data-label="Detail">{item.detail}</td>
-                      <td data-label="Alasan">{item.reason}</td>
-                      <td data-label="Status">
-                        <span className={`status ${item.status === "APPROVED" ? "good" : item.status === "REJECTED" ? "bad" : "warn"}`}>
-                          {titleCaseEnum(item.status)}
-                        </span>
-                      </td>
-                      <td data-label="Review">
-                        {item.reviewedAt ? (
-                          <>
-                            {formatDateTime(item.reviewedAt)}
-                            {item.reviewNotes ? ` - ${item.reviewNotes}` : ""}
-                          </>
-                        ) : (
-                          "Menunggu review"
-                        )}
-                      </td>
-                    </tr>
-                  ))}
-                  {requestRows.length === 0 ? (
-                    <tr>
-                      <td colSpan={7}>Belum ada riwayat pengajuan.</td>
-                    </tr>
-                  ) : null}
-                </tbody>
-              </table>
-            </div>
-          </section>
         </div>
       )}
     </AppShell>
   );
-}
-
-function formatOptionalTime(value: Date | null) {
-  return value ? formatTime(value) : "-";
 }

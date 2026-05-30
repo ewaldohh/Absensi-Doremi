@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
-import { combineDateAndTime } from "@/lib/dates";
+import { combineDateAndTime, startOfDateInput } from "@/lib/dates";
 
 export async function POST(request: Request) {
   const user = await getCurrentUser();
@@ -19,7 +19,7 @@ export async function POST(request: Request) {
     data: {
       employeeId: String(formData.get("employeeId") ?? ""),
       branchId: String(formData.get("branchId") ?? ""),
-      scheduleDate: new Date(`${scheduleDate}T00:00:00`),
+      scheduleDate: startOfDateInput(scheduleDate),
       startTime: combineDateAndTime(scheduleDate, startTime),
       endTime: combineDateAndTime(scheduleDate, endTime),
       scheduleType: String(formData.get("scheduleType") ?? "OTHER") as

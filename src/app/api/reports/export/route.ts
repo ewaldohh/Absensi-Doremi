@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
 import { toExcelCsv } from "@/lib/csv";
+import { endOfDateInput, startOfDateInput, toDateInputValue } from "@/lib/dates";
 import { prisma } from "@/lib/db";
 import { formatDate, formatDateTime, formatTime, titleCaseEnum } from "@/lib/format";
 
@@ -194,23 +195,16 @@ function normalizeReportType(value: string | null): ReportType {
 
 function getDateRange(url: URL) {
   const today = new Date();
-  const startInput = url.searchParams.get("start") || toDateInput(today, 1);
-  const endInput = url.searchParams.get("end") || toDateInput(today);
+  const endInput = url.searchParams.get("end") || toDateInputValue(today);
+  const [year, month] = endInput.split("-");
+  const startInput = url.searchParams.get("start") || `${year}-${month}-01`;
 
   return {
     startInput,
     endInput,
-    startDate: new Date(`${startInput}T00:00:00`),
-    endDate: new Date(`${endInput}T23:59:59`)
+    startDate: startOfDateInput(startInput),
+    endDate: endOfDateInput(endInput)
   };
-}
-
-function toDateInput(date: Date, day?: number) {
-  const value = day ? new Date(date.getFullYear(), date.getMonth(), day) : date;
-  const year = value.getFullYear();
-  const month = `${value.getMonth() + 1}`.padStart(2, "0");
-  const datePart = `${value.getDate()}`.padStart(2, "0");
-  return `${year}-${month}-${datePart}`;
 }
 
 function legacyCorrectionTime(

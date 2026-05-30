@@ -1,6 +1,6 @@
 import { AppShell } from "@/components/app-shell";
 import { requireRole, requireUser } from "@/lib/auth";
-import { getPayrollPeriod, toDateInputValue } from "@/lib/dates";
+import { endOfDateInput, getPayrollPeriod, startOfDateInput, toDateInputValue } from "@/lib/dates";
 import { prisma } from "@/lib/db";
 import { formatDate, formatDateTime, formatTime, titleCaseEnum } from "@/lib/format";
 
@@ -21,8 +21,8 @@ export default async function ReportsPage({ searchParams }: ReportsPageProps) {
   const startInput = params.start || toDateInputValue(payrollPeriod.periodStart);
   const endInput = params.end || toDateInputValue(payrollPeriod.periodEnd);
   const employeeId = params.employeeId || "";
-  const startDate = new Date(`${startInput}T00:00:00`);
-  const endDate = new Date(`${endInput}T23:59:59`);
+  const startDate = startOfDateInput(startInput);
+  const endDate = endOfDateInput(endInput);
   const employeeFilter = employeeId ? { employeeId } : {};
   const exportQuery = new URLSearchParams({
     start: startInput,

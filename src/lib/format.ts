@@ -7,7 +7,8 @@ const rupiahFormatter = new Intl.NumberFormat("id-ID", {
 const dateFormatter = new Intl.DateTimeFormat("id-ID", {
   day: "2-digit",
   month: "short",
-  year: "numeric"
+  year: "numeric",
+  timeZone: "Asia/Jakarta"
 });
 
 const dateTimeFormatter = new Intl.DateTimeFormat("id-ID", {
@@ -15,12 +16,14 @@ const dateTimeFormatter = new Intl.DateTimeFormat("id-ID", {
   month: "short",
   year: "numeric",
   hour: "2-digit",
-  minute: "2-digit"
+  minute: "2-digit",
+  timeZone: "Asia/Jakarta"
 });
 
 const timeFormatter = new Intl.DateTimeFormat("id-ID", {
   hour: "2-digit",
-  minute: "2-digit"
+  minute: "2-digit",
+  timeZone: "Asia/Jakarta"
 });
 
 export function formatRupiah(value: number) {

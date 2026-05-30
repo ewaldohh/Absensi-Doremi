@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server";
 import { getCurrentUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
-import { combineDateAndTime } from "@/lib/dates";
+import { combineDateAndTime, startOfDateInput } from "@/lib/dates";
 
 export async function POST(request: Request) {
   const user = await getCurrentUser();
@@ -20,7 +20,7 @@ export async function POST(request: Request) {
   await prisma.overtimeRequest.create({
     data: {
       employeeId: user.employee.id,
-      overtimeDate: new Date(`${overtimeDateInput}T00:00:00`),
+      overtimeDate: startOfDateInput(overtimeDateInput),
       startTime,
       endTime,
       totalMinutes,
