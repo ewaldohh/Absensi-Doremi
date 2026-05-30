@@ -97,13 +97,13 @@ export default async function PayrollPage() {
                     <tbody>
                       {run.items.map((item) => (
                         <tr key={item.id}>
-                          <td>{item.employee.fullName}</td>
-                          <td>{formatRupiah(item.grossEarnings)}</td>
-                          <td>{formatRupiah(item.totalDeductions)}</td>
-                          <td>
+                          <td data-label="Karyawan">{item.employee.fullName}</td>
+                          <td data-label="Earning">{formatRupiah(item.grossEarnings)}</td>
+                          <td data-label="Deduction">{formatRupiah(item.totalDeductions)}</td>
+                          <td data-label="Net">
                             <strong>{formatRupiah(item.netPay)}</strong>
                           </td>
-                          <td>{titleCaseEnum(item.emailStatus)}</td>
+                          <td data-label="Email">{titleCaseEnum(item.emailStatus)}</td>
                         </tr>
                       ))}
                     </tbody>
@@ -144,10 +144,10 @@ export default async function PayrollPage() {
                     <tbody>
                       {item.lines.map((line) => (
                         <tr key={line.id}>
-                          <td>{line.componentName}</td>
-                          <td>{titleCaseEnum(line.componentType)}</td>
-                          <td>{line.quantity}</td>
-                          <td>{formatRupiah(line.amount)}</td>
+                          <td data-label="Komponen">{line.componentName}</td>
+                          <td data-label="Tipe">{titleCaseEnum(line.componentType)}</td>
+                          <td data-label="Qty">{line.quantity}</td>
+                          <td data-label="Amount">{formatRupiah(line.amount)}</td>
                         </tr>
                       ))}
                     </tbody>

@@ -100,11 +100,11 @@ export default async function EmployeesPage() {
               <tbody>
                 {employees.map((employee) => (
                   <tr key={employee.id}>
-                    <td>{employee.fullName}</td>
-                    <td>{employee.user.email}</td>
-                    <td>{titleCaseEnum(employee.employmentType)}</td>
-                    <td>{employee.defaultBranch?.name ?? "-"}</td>
-                    <td>
+                    <td data-label="Nama">{employee.fullName}</td>
+                    <td data-label="Email">{employee.user.email}</td>
+                    <td data-label="Tipe">{titleCaseEnum(employee.employmentType)}</td>
+                    <td data-label="Cabang">{employee.defaultBranch?.name ?? "-"}</td>
+                    <td data-label="Status">
                       <span className={`status ${employee.isActive ? "good" : "bad"}`}>
                         {employee.isActive ? "Aktif" : "Nonaktif"}
                       </span>

@@ -87,12 +87,12 @@ export default async function DashboardPage() {
               <tbody>
                 {schedules.map((schedule) => (
                   <tr key={schedule.id}>
-                    <td>{schedule.employee.fullName}</td>
-                    <td>
+                    <td data-label="Karyawan">{schedule.employee.fullName}</td>
+                    <td data-label="Jam">
                       {formatTime(schedule.startTime)} - {formatTime(schedule.endTime)}
                     </td>
-                    <td>{titleCaseEnum(schedule.scheduleType)}</td>
-                    <td>{schedule.branch.name}</td>
+                    <td data-label="Tipe">{titleCaseEnum(schedule.scheduleType)}</td>
+                    <td data-label="Cabang">{schedule.branch.name}</td>
                   </tr>
                 ))}
                 {schedules.length === 0 ? (
@@ -122,10 +122,10 @@ export default async function DashboardPage() {
               <tbody>
                 {recentAttendance.map((event) => (
                   <tr key={event.id}>
-                    <td>{event.employee.fullName}</td>
-                    <td>{formatTime(event.eventTime)}</td>
-                    <td>{titleCaseEnum(event.eventType)}</td>
-                    <td>
+                    <td data-label="Karyawan">{event.employee.fullName}</td>
+                    <td data-label="Waktu">{formatTime(event.eventTime)}</td>
+                    <td data-label="Tipe">{titleCaseEnum(event.eventType)}</td>
+                    <td data-label="Status">
                       <span className={`status ${event.status === "VALID" ? "good" : "warn"}`}>
                         {titleCaseEnum(event.status)}
                       </span>

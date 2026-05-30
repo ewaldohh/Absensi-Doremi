@@ -93,12 +93,12 @@ export default async function SchedulesPage() {
               <tbody>
                 {schedules.map((schedule) => (
                   <tr key={schedule.id}>
-                    <td>{formatDate(schedule.scheduleDate)}</td>
-                    <td>{schedule.employee.fullName}</td>
-                    <td>
+                    <td data-label="Tanggal">{formatDate(schedule.scheduleDate)}</td>
+                    <td data-label="Karyawan">{schedule.employee.fullName}</td>
+                    <td data-label="Jam">
                       {formatTime(schedule.startTime)} - {formatTime(schedule.endTime)}
                     </td>
-                    <td>{titleCaseEnum(schedule.scheduleType)}</td>
+                    <td data-label="Tipe">{titleCaseEnum(schedule.scheduleType)}</td>
                   </tr>
                 ))}
               </tbody>

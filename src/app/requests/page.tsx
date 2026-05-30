@@ -195,17 +195,17 @@ export default async function RequestsPage() {
                 <tbody>
                   {requestRows.map((item) => (
                     <tr key={`${item.type}-${item.id}`}>
-                      <td>{formatDateTime(item.date)}</td>
-                      <td>{item.type}</td>
-                      <td>{item.period}</td>
-                      <td>{item.detail}</td>
-                      <td>{item.reason}</td>
-                      <td>
+                      <td data-label="Diajukan">{formatDateTime(item.date)}</td>
+                      <td data-label="Jenis">{item.type}</td>
+                      <td data-label="Periode">{item.period}</td>
+                      <td data-label="Detail">{item.detail}</td>
+                      <td data-label="Alasan">{item.reason}</td>
+                      <td data-label="Status">
                         <span className={`status ${item.status === "APPROVED" ? "good" : item.status === "REJECTED" ? "bad" : "warn"}`}>
                           {titleCaseEnum(item.status)}
                         </span>
                       </td>
-                      <td>
+                      <td data-label="Review">
                         {item.reviewedAt ? (
                           <>
                             {formatDateTime(item.reviewedAt)}

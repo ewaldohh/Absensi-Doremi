@@ -67,12 +67,12 @@ export default async function AttendancePage() {
                   <tbody>
                     {schedules.map((schedule) => (
                       <tr key={schedule.id}>
-                        <td>
+                        <td data-label="Jam">
                           {formatTime(schedule.startTime)} - {formatTime(schedule.endTime)}
                         </td>
-                        <td>{titleCaseEnum(schedule.scheduleType)}</td>
-                        <td>{schedule.branch.name}</td>
-                        <td>
+                        <td data-label="Tipe">{titleCaseEnum(schedule.scheduleType)}</td>
+                        <td data-label="Cabang">{schedule.branch.name}</td>
+                        <td data-label="Status">
                           <span className="status info">{titleCaseEnum(schedule.status)}</span>
                         </td>
                       </tr>
@@ -103,9 +103,9 @@ export default async function AttendancePage() {
                   <tbody>
                     {events.map((event) => (
                       <tr key={event.id}>
-                        <td>{formatDateTime(event.eventTime)}</td>
-                        <td>{titleCaseEnum(event.eventType)}</td>
-                        <td>
+                        <td data-label="Waktu">{formatDateTime(event.eventTime)}</td>
+                        <td data-label="Tipe">{titleCaseEnum(event.eventType)}</td>
+                        <td data-label="Status">
                           <span className={`status ${event.status === "VALID" ? "good" : "warn"}`}>
                             {titleCaseEnum(event.status)}
                           </span>
@@ -141,11 +141,11 @@ export default async function AttendancePage() {
                 <tbody>
                   {historyEvents.map((event) => (
                     <tr key={event.id}>
-                      <td>{formatDateTime(event.eventTime)}</td>
-                      <td>{titleCaseEnum(event.eventType)}</td>
-                      <td>{event.branch.name}</td>
-                      <td>{titleCaseEnum(event.source)}</td>
-                      <td>
+                      <td data-label="Waktu">{formatDateTime(event.eventTime)}</td>
+                      <td data-label="Tipe">{titleCaseEnum(event.eventType)}</td>
+                      <td data-label="Cabang">{event.branch.name}</td>
+                      <td data-label="Sumber">{titleCaseEnum(event.source)}</td>
+                      <td data-label="Status">
                         <span className={`status ${event.status === "VALID" ? "good" : event.status === "REJECTED" ? "bad" : "warn"}`}>
                           {titleCaseEnum(event.status)}
                         </span>

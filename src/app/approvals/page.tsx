@@ -106,11 +106,11 @@ function ApprovalTable({
           <tbody>
             {rows.map((row) => (
               <tr key={row.id}>
-                <td>{row.employeeName}</td>
-                <td>{row.date}</td>
-                <td>{row.detail}</td>
-                <td>{row.evidence ? <a href={row.evidence}>Lihat</a> : "-"}</td>
-                <td>
+                <td data-label="Karyawan">{row.employeeName}</td>
+                <td data-label="Tanggal">{row.date}</td>
+                <td data-label="Detail">{row.detail}</td>
+                <td data-label="Bukti">{row.evidence ? <a href={row.evidence}>Lihat</a> : "-"}</td>
+                <td data-label="Aksi">
                   <div className="inline-actions">
                     <form action="/api/approvals" method="post">
                       <input type="hidden" name="type" value={row.type} />

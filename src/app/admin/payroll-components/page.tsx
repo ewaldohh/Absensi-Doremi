@@ -104,10 +104,10 @@ export default async function PayrollComponentsPage() {
               <tbody>
                 {components.map((component) => (
                   <tr key={component.id}>
-                    <td>{component.name}</td>
-                    <td>{titleCaseEnum(component.componentType)}</td>
-                    <td>{titleCaseEnum(component.calculationType)}</td>
-                    <td>{formatRupiah(component.defaultAmount)}</td>
+                    <td data-label="Nama">{component.name}</td>
+                    <td data-label="Tipe">{titleCaseEnum(component.componentType)}</td>
+                    <td data-label="Kalkulasi">{titleCaseEnum(component.calculationType)}</td>
+                    <td data-label="Default">{formatRupiah(component.defaultAmount)}</td>
                   </tr>
                 ))}
               </tbody>
@@ -131,9 +131,9 @@ export default async function PayrollComponentsPage() {
               <tbody>
                 {assignments.map((assignment) => (
                   <tr key={assignment.id}>
-                    <td>{assignment.employee.fullName}</td>
-                    <td>{assignment.payrollComponent.name}</td>
-                    <td>{formatRupiah(assignment.amount ?? assignment.payrollComponent.defaultAmount)}</td>
+                    <td data-label="Karyawan">{assignment.employee.fullName}</td>
+                    <td data-label="Komponen">{assignment.payrollComponent.name}</td>
+                    <td data-label="Nominal">{formatRupiah(assignment.amount ?? assignment.payrollComponent.defaultAmount)}</td>
                   </tr>
                 ))}
               </tbody>

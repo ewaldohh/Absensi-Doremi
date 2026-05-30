@@ -220,11 +220,11 @@ export default async function ReportsPage({ searchParams }: ReportsPageProps) {
               <tbody>
                 {attendancePreview.map((event) => (
                   <tr key={event.id}>
-                    <td>{event.employee.fullName}</td>
-                    <td>{formatDateTime(event.eventTime)}</td>
-                    <td>{titleCaseEnum(event.eventType)}</td>
-                    <td>{event.branch.name}</td>
-                    <td>
+                    <td data-label="Karyawan">{event.employee.fullName}</td>
+                    <td data-label="Waktu">{formatDateTime(event.eventTime)}</td>
+                    <td data-label="Tipe">{titleCaseEnum(event.eventType)}</td>
+                    <td data-label="Cabang">{event.branch.name}</td>
+                    <td data-label="Status">
                       <span className={`status ${event.status === "VALID" ? "good" : event.status === "REJECTED" ? "bad" : "warn"}`}>
                         {titleCaseEnum(event.status)}
                       </span>
@@ -259,11 +259,11 @@ export default async function ReportsPage({ searchParams }: ReportsPageProps) {
               <tbody>
                 {requestPreview.map((item) => (
                   <tr key={`${item.category}-${item.id}`}>
-                    <td>{item.employeeName}</td>
-                    <td>{item.category}</td>
-                    <td>{item.period}</td>
-                    <td>{item.detail}</td>
-                    <td>
+                    <td data-label="Karyawan">{item.employeeName}</td>
+                    <td data-label="Jenis">{item.category}</td>
+                    <td data-label="Periode">{item.period}</td>
+                    <td data-label="Detail">{item.detail}</td>
+                    <td data-label="Status">
                       <span className={`status ${item.status === "APPROVED" ? "good" : item.status === "REJECTED" ? "bad" : "warn"}`}>
                         {titleCaseEnum(item.status)}
                       </span>
