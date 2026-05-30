@@ -26,8 +26,6 @@ type AppShellProps = {
 };
 
 export function AppShell({ user, title, subtitle, actions, children }: AppShellProps) {
-  const isAdmin = user.role === "ADMIN" || user.role === "OWNER";
-
   return (
     <div className="app-shell">
       <aside className="sidebar">
@@ -46,14 +44,14 @@ export function AppShell({ user, title, subtitle, actions, children }: AppShellP
           </summary>
           <div className="mobile-menu-panel">
             <nav className="nav-list" aria-label="Navigasi utama mobile">
-              <NavLinks isAdmin={isAdmin} />
+              <NavLinks role={user.role} />
             </nav>
             <UserArea user={user} />
           </div>
         </details>
 
         <nav className="nav-list desktop-nav" aria-label="Navigasi utama">
-          <NavLinks isAdmin={isAdmin} />
+          <NavLinks role={user.role} />
         </nav>
 
         <UserArea user={user} className="desktop-user" />
@@ -73,7 +71,10 @@ export function AppShell({ user, title, subtitle, actions, children }: AppShellP
   );
 }
 
-function NavLinks({ isAdmin }: { isAdmin: boolean }) {
+function NavLinks({ role }: { role: CurrentUser["role"] }) {
+  const isAdmin = role === "ADMIN" || role === "OWNER";
+  const isOwner = role === "OWNER";
+
   return (
     <>
       <a className="nav-link" href="/dashboard">
@@ -88,10 +89,12 @@ function NavLinks({ isAdmin }: { isAdmin: boolean }) {
         <ClipboardCheck />
         Pengajuan
       </a>
-      <a className="nav-link" href="/payroll">
-        <Banknote />
-        Payroll
-      </a>
+      {role !== "ADMIN" ? (
+        <a className="nav-link" href="/payroll">
+          <Banknote />
+          Payroll
+        </a>
+      ) : null}
       {isAdmin ? (
         <>
           <a className="nav-link" href="/admin/qr">
@@ -110,14 +113,18 @@ function NavLinks({ isAdmin }: { isAdmin: boolean }) {
             <CalendarDays />
             Libur
           </a>
-          <a className="nav-link" href="/approvals">
-            <UserRoundCheck />
-            Approval
-          </a>
-          <a className="nav-link" href="/admin/payroll-components">
-            <Settings2 />
-            Komponen
-          </a>
+          {isOwner ? (
+            <>
+              <a className="nav-link" href="/approvals">
+                <UserRoundCheck />
+                Approval
+              </a>
+              <a className="nav-link" href="/admin/payroll-components">
+                <Settings2 />
+                Komponen
+              </a>
+            </>
+          ) : null}
           <a className="nav-link" href="/admin/reports">
             <FileText />
             Rekap
