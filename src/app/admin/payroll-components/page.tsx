@@ -1,11 +1,20 @@
 import { AppShell } from "@/components/app-shell";
+import { PayrollComponentManagement } from "@/components/payroll-component-management";
 import { requireRole, requireUser } from "@/lib/auth";
 import { prisma } from "@/lib/db";
-import { formatRupiah, titleCaseEnum } from "@/lib/format";
+import { formatRupiah } from "@/lib/format";
 
-export default async function PayrollComponentsPage() {
+type PayrollComponentsPageProps = {
+  searchParams: Promise<{
+    error?: string;
+    success?: string;
+  }>;
+};
+
+export default async function PayrollComponentsPage({ searchParams }: PayrollComponentsPageProps) {
   const user = await requireUser();
-  requireRole(user, ["ADMIN", "OWNER"]);
+  requireRole(user, ["OWNER"]);
+  const params = await searchParams;
 
   const [components, employees, assignments] = await Promise.all([
     prisma.payrollComponent.findMany({ orderBy: { name: "asc" } }),
@@ -19,6 +28,9 @@ export default async function PayrollComponentsPage() {
 
   return (
     <AppShell user={user} title="Komponen Payroll" subtitle="Komponen gaji dan potongan yang bisa berbeda per karyawan.">
+      {params.error ? <div className="notice error" style={{ marginBottom: 16 }}>{params.error}</div> : null}
+      {params.success ? <div className="notice" style={{ marginBottom: 16 }}>{params.success}</div> : null}
+
       <section className="grid two">
         <form className="card pad stack" action="/api/payroll-components" method="post">
           <h2 style={{ margin: 0 }}>Tambah Komponen</h2>
@@ -88,31 +100,17 @@ export default async function PayrollComponentsPage() {
 
       <section className="grid two" style={{ marginTop: 20 }}>
         <div>
-          <div className="section-title">
-            <h2>Master Komponen</h2>
-          </div>
-          <div className="table-wrap">
-            <table>
-              <thead>
-                <tr>
-                  <th>Nama</th>
-                  <th>Tipe</th>
-                  <th>Kalkulasi</th>
-                  <th>Default</th>
-                </tr>
-              </thead>
-              <tbody>
-                {components.map((component) => (
-                  <tr key={component.id}>
-                    <td data-label="Nama">{component.name}</td>
-                    <td data-label="Tipe">{titleCaseEnum(component.componentType)}</td>
-                    <td data-label="Kalkulasi">{titleCaseEnum(component.calculationType)}</td>
-                    <td data-label="Default">{formatRupiah(component.defaultAmount)}</td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
+          <PayrollComponentManagement
+            components={components.map((component) => ({
+              id: component.id,
+              name: component.name,
+              componentType: component.componentType,
+              calculationType: component.calculationType,
+              defaultAmount: component.defaultAmount,
+              isTaxable: component.isTaxable,
+              isActive: component.isActive
+            }))}
+          />
         </div>
 
         <div>
