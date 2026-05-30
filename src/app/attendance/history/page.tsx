@@ -1,4 +1,5 @@
 import { AppShell } from "@/components/app-shell";
+import { AttendanceSubnav } from "@/components/attendance-subnav";
 import { requireUser } from "@/lib/auth";
 import { endOfDateInput, getPayrollPeriod, startOfDateInput, toDateInputValue } from "@/lib/dates";
 import { prisma } from "@/lib/db";
@@ -45,14 +46,7 @@ export default async function AttendanceHistoryPage({ searchParams }: Attendance
         <div className="empty-state">Akun ini belum terhubung ke data karyawan.</div>
       ) : (
         <div className="grid">
-          <nav className="subnav" aria-label="Sub menu absensi">
-            <a className="subnav-link" href="/attendance">
-              Absen Hari Ini
-            </a>
-            <a className="subnav-link active" href="/attendance/history">
-              Riwayat Absensi
-            </a>
-          </nav>
+          <AttendanceSubnav active="history" role={user.role} />
 
           <section className="card pad stack">
             <form className="form-grid" method="get">

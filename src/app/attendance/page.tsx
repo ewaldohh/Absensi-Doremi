@@ -1,4 +1,5 @@
 import { AttendanceConsole } from "@/components/attendance-console";
+import { AttendanceSubnav } from "@/components/attendance-subnav";
 import { AppShell } from "@/components/app-shell";
 import { prisma } from "@/lib/db";
 import { requireUser } from "@/lib/auth";
@@ -39,14 +40,7 @@ export default async function AttendancePage() {
         <div className="empty-state">Akun ini belum terhubung ke data karyawan.</div>
       ) : (
         <div className="grid">
-          <nav className="subnav" aria-label="Sub menu absensi">
-            <a className="subnav-link active" href="/attendance">
-              Absen Hari Ini
-            </a>
-            <a className="subnav-link" href="/attendance/history">
-              Riwayat Absensi
-            </a>
-          </nav>
+          <AttendanceSubnav active="today" role={user.role} />
 
           <AttendanceConsole employeeName={employee.fullName} />
 
